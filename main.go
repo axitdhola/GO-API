@@ -69,7 +69,7 @@ func addPerson(context *gin.Context){
 }
 
 func deletePerson(context *gin.Context){
-	did := context.Param("id")
+	id := context.Param("id")
     db, err := sql.Open("mysql", "root:root@tcp(localhost:3306)/Config")
 	if err != nil {
 		panic(err.Error())
@@ -77,49 +77,47 @@ func deletePerson(context *gin.Context){
 	}
 	defer db.Close()
 
-	query:= "DELETE FROM demo1 WHERE id = ?;"
-	res, err := db.Exec(query,did)
-
-	if err != nil {
-		return
-	}
-	count, err := res.RowsAffected()
+	res, err:= db.Query("DELETE FROM demo1 WHERE pid = ?" , id)
+	defer res.Close()
 	if err != nil {
 		return
 	}
 	
-	context.IndentedJSON(http.StatusOK, gin.H{"Rows affected":count})
+	context.IndentedJSON(http.StatusOK, "completed")
 }
 
 func updatePerson(context *gin.Context){
-	did := context.Param("id")
-    db, err := sql.Open("mysql", "root:root@tcp(localhost:3306)/Config")
-	if err != nil {
-		panic(err.Error())
-	    return
+	var newPerson Person
+	err := context.BindJSON(&newPerson)
+	if(err != nil) {
+		return
 	}
+
+	id := context.Param("id")
+    db, err := sql.Open("mysql" , "root:root@tcp(localhost:3306)/Config")
+	if(err!=nil){
+		panic(err.Error())
+		return
+	}
+
 	defer db.Close()
 
-	query:= "DELETE FROM demo1 WHERE id = ?;"
-	res, err := db.Exec(query,did)
-
-	if err != nil {
+	res, err := db.Query("UPDATE demo1 SET Name = ? WHERE pid = ?" , newPerson.Name , id)
+	defer res.Close()
+    if(err!=nil){
+		panic(err.Error())
 		return
 	}
-	count, err := res.RowsAffected()
-	if err != nil {
-		return
-	}
-	
-	context.IndentedJSON(http.StatusOK, gin.H{"Rows affected":count})
+    
+	context.IndentedJSON(http.StatusOK, res)
 }
 
 func main(){
 	router := gin.Default() // create server 
 	router.GET("/Person" , getPerson)
 	router.POST("/Person" , addPerson)
-	// router.PUT("/Person" , updatePerson)
-	router.DELETE("/Person/:id" , deletePerson)
+	router.PUT("/Person/:id" , updatePerson)
+	router.DELETE("/Person/:id" , deletePerson) // : represent dynamic
 	router.Run("localhost:9090") // path endpoint
 }
 
