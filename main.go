@@ -2,9 +2,10 @@ package main
 
 import (
 	"database/sql"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
-	"net/http"
 )
 
 type Person struct {
@@ -41,7 +42,7 @@ func resultQuery(query string) ([]Person, bool) {
 	return result, true
 }
 
-func getPerson(context *gin.Context) { // Context contains data
+func GetPerson(context *gin.Context) { // Context contains data
 
 	result, flag := resultQuery("SELECT * FROM demo1")
 	if !flag {
@@ -86,7 +87,7 @@ func deletePerson(context *gin.Context) {
 	context.IndentedJSON(http.StatusOK, "Deleted")
 }
 
-func updatePerson(context *gin.Context) {
+func UpdatePerson(context *gin.Context) {
 	var newPerson Person
 	err := context.BindJSON(&newPerson)
 	if err != nil {
@@ -114,9 +115,9 @@ func updatePerson(context *gin.Context) {
 
 func main() {
 	router := gin.Default() // create server
-	router.GET("/Person", getPerson)
+	router.GET("/Person", GetPerson)
 	router.POST("/Person", addPerson)
-	router.PUT("/Person/:id", updatePerson)
+	router.PUT("/Person/:id", UpdatePerson)
 	router.DELETE("/Person/:id", deletePerson) // : represent dynamic
 	router.Run("localhost:9090")               // path endpoint
 }
